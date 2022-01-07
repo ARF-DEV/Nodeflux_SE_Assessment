@@ -164,7 +164,9 @@ def get_daily_data() :
 def check_costum_routes(routes):
     try:
         for i in range(len(routes)):
-            int(routes[i])
+            route = int(routes[i])
+            if route < 1:
+                return False
             if len(routes[i]) == 1:
                 routes[i] = '0' + routes[i]
     except ValueError:
