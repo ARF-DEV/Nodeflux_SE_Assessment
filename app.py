@@ -172,9 +172,9 @@ def monthly_in_a_year(year):
     result = get_monthly_data()
     response = []
     for current_month_data in result:
-        date_int = int(''.join(current_month_data['month'].split('-')))
+        month_int = int(''.join(current_month_data['month'].split('-')))
         
-        if date_int >= since_int and date_int <= upto_int:
+        if month_int >= since_int and month_int <= upto_int:
             response.append(current_month_data)
         
     return {
@@ -210,11 +210,11 @@ def get_specific_month(year, month):
 
     result = get_monthly_data()
     response = {}
-    date_wanted_int = int(''.join([year, month]))
+    month_wanted_int = int(''.join([year, month]))
     for current_month_data in result:
-        date_int = int(''.join(current_month_data['month'].split('-')))
+        month_int = int(''.join(current_month_data['month'].split('-')))
         
-        if date_wanted_int == date_int:
+        if month_wanted_int == month_int:
             response = current_month_data
             break
         
