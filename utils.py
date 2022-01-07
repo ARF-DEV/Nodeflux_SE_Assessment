@@ -92,3 +92,25 @@ def get_yearly_data():
     result.append(last_year_data)
 
     return result
+
+
+
+def validate_parameters_monthly(params, expected_n):
+    if len(params) != expected_n:
+        return False
+    if len(params) == 1:
+        pass
+    elif len(params) == 2:
+        try:
+            if int(params[1]) < 1 or int(params[1]) > 31:
+                print('test1')
+                return False
+        except ValueError:
+            print('test2')
+            return False
+        
+        if len(params[1]) == 1 :
+            params[1] = '0' + params[1]
+    
+
+        return True

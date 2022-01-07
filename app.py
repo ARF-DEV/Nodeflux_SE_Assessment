@@ -3,7 +3,7 @@ from flask import Flask
 from flask import jsonify
 from flask import request
 
-from utils import get_monthly_data, get_yearly_data
+from utils import get_monthly_data, get_yearly_data, validate_parameters_monthly
 
 app = Flask(__name__)
 
@@ -78,27 +78,31 @@ def get_year(year):
 @app.route('/monthly')
 def monthly():
     
-    try:
-        since = "2020-03" if request.args.get('since') == None else '-'.join(request.args.get('since').split('.'))
-        upto  = "2022-01" if request.args.get('upto') == None else '-'.join(request.args.get('upto').split('.'))
-    except ValueError:
+    since = ["2020", "03"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = ["2022","01"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+    
+    if not validate_parameters_monthly(since, 2) :
         return {
             "ok" : False,
-            "message" : "Query parameters cannot be converted to integer"
+            "message" : "Query parameter 'since' is not valid"
+        }
+    
+    if not validate_parameters_monthly(upto, 2) :
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'upto' is not valid"
         }
 
-
-    # ex. 2021-03 -> 202103
-    #                ^^^^..
+    # ex. ["2021", "03"] -> 202103
+    #                       ^^^^..
     # digits above ^ symbol is the year
     # digits above . symbol is the month
     # if the year is the same (ex. 202104 and 202103) it will compare month digit only
     # if the year is different (ex. 202004 and 202201) the month side wont matter 
     # because the number on year side are more significant than on the month side 
-    since_int = int(''.join(since.split('-')))
-    upto_int = int(''.join(upto.split('-')))
+    since_int = int(''.join(since))
+    upto_int = int(''.join(upto))
 
-    print(since_int, upto_int)
     if since_int > upto_int:
         return {
             "ok" : False,
@@ -110,13 +114,13 @@ def monthly():
     response = []
     save = False
     for current_month_data in result:
-        if current_month_data['month'] == since:
+        if current_month_data['month'] == '-'.join(since):
             save = True
         
         if save:
             response.append(current_month_data)
-
-        if current_month_data['month'] == upto:
+        
+        if current_month_data['month'] == '-'.join(upto):
             save = False
         
         
@@ -126,3 +130,96 @@ def monthly():
         "message" : "Data fetch success"
     }
 
+@app.route('/monthly/<year>')
+def monthly_in_a_year(year):
+    since = [year, "01"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = [year,"12"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+    
+    if not validate_parameters_monthly(since, 2) :
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' is not valid"
+        }
+    
+    if not validate_parameters_monthly(upto, 2) :
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'upto' is not valid"
+        }
+
+    if int(since[0]) != year and int(upto[0]) != year:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' and 'upto' must have the same year as the endpoint"
+        }
+
+    # ex. ["2021", "03"] -> 202103
+    #                       ^^^^..
+    # digits above ^ symbol is the year
+    # digits above . symbol is the month
+    # if the year is the same (ex. 202104 and 202103) it will compare month digit only
+    # if the year is different (ex. 202004 and 202201) the month side wont matter 
+    # because the number on year side are more significant than on the month side 
+    since_int = int(''.join(since))
+    upto_int = int(''.join(upto))
+
+    if since_int > upto_int:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' cannot be larger than 'upto'"
+        }
+    
+    result = get_monthly_data()
+    response = []
+    for current_month_data in result:
+        date_int = int(''.join(current_month_data['month'].split('-')))
+        
+        if date_int >= since_int and date_int <= upto_int:
+            response.append(current_month_data)
+        
+    return {
+        "ok" : True,
+        "data" : response,
+        "message" : "Data fetch success"
+    }
+
+@app.route('/monthly/<year>/<month>')
+def get_specific_month(year, month):
+    try:
+        int(year)
+    except ValueError:
+        return {
+            "ok" : False,
+            "message" : "year is not valid"
+        }
+
+    try:
+        int(month)
+    except ValueError:
+        return {
+            "ok" : False,
+            "message" : "month is not valid"
+        }
+
+
+    if int(month) < 1 or int(month) > 31:
+        return {
+                "ok" : False,
+                "message" : "month must be >= 1 or <= 31"
+            }
+
+    result = get_monthly_data()
+    response = {}
+    date_wanted_int = int(''.join([year, month]))
+    for current_month_data in result:
+        date_int = int(''.join(current_month_data['month'].split('-')))
+        
+        if date_wanted_int == date_int:
+            response = current_month_data
+            break
+        
+    return {
+        "ok" : True,
+        "data" : response,
+        "message" : "Data fetch success"
+    }
