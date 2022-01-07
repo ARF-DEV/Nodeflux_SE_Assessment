@@ -95,18 +95,20 @@ def get_yearly_data():
 
 
 
-def validate_parameters_monthly(params, expected_n):
-    if len(params) != expected_n:
+def validate_monthly_parameters(params):
+    if len(params) != 2:
+        print('A')
         return False
-    if len(params) == 1:
-        pass
-    elif len(params) == 2:
+    else:
         try:
-            if int(params[1]) < 1 or int(params[1]) > 31:
-                print('test1')
+            if int(params[0]) < 0:
+                print('B')
+                return False
+            if int(params[1]) < 1 or int(params[1]) > 12:
+                print('C')
                 return False
         except ValueError:
-            print('test2')
+            print('D')
             return False
         
         if len(params[1]) == 1 :
@@ -114,3 +116,58 @@ def validate_parameters_monthly(params, expected_n):
     
 
         return True
+
+def validate_daily_parameters(params):
+    if len(params) != 3:
+        return False
+    else:
+        try:
+            if int(params[0]) < 0:
+                return False
+            if int(params[1]) < 1 or int(params[1]) > 12:
+                return False
+            if int(params[2]) < 1 or int(params[2]) > 31:
+                return False
+        except ValueError:
+            return False
+        
+        if len(params[1]) == 1 :
+            params[1] = '0' + params[1]
+        if len(params[2]) == 1 :
+            params[2] = '0' + params[2]
+    
+
+        return True
+
+
+def get_daily_data() :
+    api_res = requests.get("https://data.covid19.go.id/public/api/update.json")
+    json_data_update = api_res.json()['update']
+    
+    per_day_data = json_data_update['harian']
+
+    result = []
+    for data in per_day_data:
+        key_string = data['key_as_string']
+        cur_date = key_string.split('T')[0]
+        
+        result.append({
+            "date": cur_date,
+            "positive": data['jumlah_positif']['value'],
+            "recovered": data['jumlah_sembuh']['value'],
+            "deaths": data['jumlah_meninggal']['value'],
+            "active": data['jumlah_dirawat']['value'],
+        })
+
+    return result
+
+def check_costum_routes(routes):
+    try:
+        for i in range(len(routes)):
+            int(routes[i])
+            if len(routes[i]) == 1:
+                routes[i] = '0' + routes[i]
+    except ValueError:
+        return False
+    
+    return True

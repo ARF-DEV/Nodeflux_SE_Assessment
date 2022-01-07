@@ -3,7 +3,7 @@ from flask import Flask
 from flask import jsonify
 from flask import request
 
-from utils import get_monthly_data, get_yearly_data, validate_parameters_monthly
+from utils import get_monthly_data, get_yearly_data, validate_monthly_parameters, get_daily_data, validate_daily_parameters, check_costum_routes
 
 app = Flask(__name__)
 
@@ -36,13 +36,19 @@ def yearly():
     except ValueError:
         return {
             "ok" : False,
-            "message" : "Query parameters cannot be converted to integer"
+            "message" : "Query parameters is invalid"
         }
 
     if since > upto :
         return {
             "ok" : False,
             "message" : "Query parameter 'since' cannot be larger than 'upto'"
+        }
+
+    if since < 0 or upto < 0:
+        return {
+            "ok" : False,
+            "message" : "Query parameters cannot be a negative number"
         }
 
     result = get_yearly_data()
@@ -61,6 +67,19 @@ def yearly():
 
 @app.route('/yearly/<year>')
 def get_year(year):
+
+    if not check_costum_routes([year]):
+        return {
+            "ok" : False,
+            "message" : "Invalid route"
+        }
+
+    if year < 0 :
+        return {
+            "ok" : False,
+            "message" : "The endpoint cannot be negative number"
+        }
+
     result = get_yearly_data()
     response = {}
     for current_year_data in result:
@@ -81,13 +100,13 @@ def monthly():
     since = ["2020", "03"] if request.args.get('since') == None else request.args.get('since').split('.')
     upto  = ["2022","01"] if request.args.get('upto') == None else request.args.get('upto').split('.')
     
-    if not validate_parameters_monthly(since, 2) :
+    if not validate_monthly_parameters(since) :
         return {
             "ok" : False,
             "message" : "Query parameter 'since' is not valid"
         }
     
-    if not validate_parameters_monthly(upto, 2) :
+    if not validate_monthly_parameters(upto) :
         return {
             "ok" : False,
             "message" : "Query parameter 'upto' is not valid"
@@ -132,22 +151,28 @@ def monthly():
 
 @app.route('/monthly/<year>')
 def monthly_in_a_year(year):
+    if not check_costum_routes([year]):
+        return {
+            "ok" : False,
+            "message" : "Invalid route"
+        }
+
     since = [year, "01"] if request.args.get('since') == None else request.args.get('since').split('.')
     upto  = [year,"12"] if request.args.get('upto') == None else request.args.get('upto').split('.')
     
-    if not validate_parameters_monthly(since, 2) :
+    if not validate_monthly_parameters(since) :
         return {
             "ok" : False,
             "message" : "Query parameter 'since' is not valid"
         }
     
-    if not validate_parameters_monthly(upto, 2) :
+    if not validate_monthly_parameters(upto):
         return {
             "ok" : False,
             "message" : "Query parameter 'upto' is not valid"
         }
 
-    if int(since[0]) != year and int(upto[0]) != year:
+    if since[0] != year or upto[0] != year:
         return {
             "ok" : False,
             "message" : "Query parameter 'since' and 'upto' must have the same year as the endpoint"
@@ -185,37 +210,189 @@ def monthly_in_a_year(year):
 
 @app.route('/monthly/<year>/<month>')
 def get_specific_month(year, month):
-    try:
-        int(year)
-    except ValueError:
+    custom_routes = [year, month]
+    if not check_costum_routes(custom_routes):
         return {
             "ok" : False,
-            "message" : "year is not valid"
+            "message" : "Route is not valid"
         }
-
-    try:
-        int(month)
-    except ValueError:
-        return {
-            "ok" : False,
-            "message" : "month is not valid"
-        }
-
-
-    if int(month) < 1 or int(month) > 31:
-        return {
-                "ok" : False,
-                "message" : "month must be >= 1 or <= 31"
-            }
-
     result = get_monthly_data()
     response = {}
-    month_wanted_int = int(''.join([year, month]))
+    month_wanted_int = '-'.join(custom_routes)
     for current_month_data in result:
-        month_int = int(''.join(current_month_data['month'].split('-')))
-        
-        if month_wanted_int == month_int:
+
+        if month_wanted_int == current_month_data['month']:
             response = current_month_data
+            break
+        
+    return {
+        "ok" : True,
+        "data" : response,
+        "message" : "Data fetch success"
+    }
+
+@app.route('/daily')
+def daily():
+    
+    since = ["2020", "03", "02"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = ["2022", "01", "07"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+
+    if not validate_daily_parameters(since):
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' is not valid"
+        }
+    if not validate_daily_parameters(upto):
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'upto' is not valid"
+        }
+
+    since_int = int(''.join(since))
+    upto_int = int(''.join(upto))
+
+    if since_int > upto_int:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' cannot be larger than 'upto'"
+        }
+    daily_data = get_daily_data()
+
+
+    response = []
+    for current_day_data in daily_data:
+        day_int = int(''.join(current_day_data['date'].split('-')))
+        
+        if day_int >= since_int and day_int <= upto_int:
+            response.append(current_day_data)
+        
+    return {
+        "ok" : True,
+        "data" : response,
+        "message" : "Data fetch success"
+    }
+
+
+@app.route('/daily/<year>')
+def daily_data_by_year(year):
+    
+    if not check_costum_routes([year]):
+        return {
+            "ok" : False,
+            "message" : "Invalid route"
+        }
+
+    since = ["2020", "03", "02"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = ["2022", "01", "07"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+
+    if not validate_daily_parameters(since):
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' is not valid"
+        }
+    if not validate_daily_parameters(upto):
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'upto' is not valid"
+        }
+    
+    if since[0] != year or upto[0] != year:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' and 'upto' must have the same year as the endpoint"
+        }
+
+    since_int = int(''.join(since))
+    upto_int = int(''.join(upto))
+
+    if since_int > upto_int:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' cannot be larger than 'upto'"
+        }
+    
+    daily_data = get_daily_data()
+    response = []
+    for current_day_data in daily_data:
+        day_int = int(''.join(current_day_data['date'].split('-')))
+        
+        if day_int >= since_int and day_int <= upto_int:
+            response.append(current_day_data)
+        
+    return {
+        "ok" : True,
+        "data" : response,
+        "message" : "Data fetch success"
+    }
+
+@app.route('/daily/<year>/<month>')
+def daily_data_by_year_and_month(year, month):
+    routes = [year,month]
+    if not check_costum_routes(routes):
+        return {
+            "ok" : False,
+            "message" : "Invalid route"
+        }
+    
+    
+    since = ["2020", "03", "02"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = ["2022", "01", "07"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+
+    if not validate_daily_parameters(since):
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' is not valid"
+        }
+    if not validate_daily_parameters(upto):
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'upto' is not valid"
+        }
+
+    if since[0] != routes[0] or since[1] != routes[1] or upto[0] != routes[0] or upto[1] != routes[1]:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' and 'upto' must have the same year and month as the endpoint"
+        }
+    since_int = int(''.join(since))
+    upto_int = int(''.join(upto))
+
+    if since_int > upto_int:
+        return {
+            "ok" : False,
+            "message" : "Query parameter 'since' cannot be larger than 'upto'"
+        }
+    
+    daily_data = get_daily_data()
+    response = []
+    for current_day_data in daily_data:
+        day_int = int(''.join(current_day_data['date'].split('-')))
+        
+        if day_int >= since_int and day_int <= upto_int:
+            response.append(current_day_data)
+        
+    return {
+        "ok" : True,
+        "data" : response,
+        "message" : "Data fetch success"
+    }
+
+@app.route('/daily/<year>/<month>/<date>')
+def daily_data_by_date(year, month, date):
+    routes = [year,month, date]
+    if not check_costum_routes(routes):
+        return {
+            "ok" : False,
+            "message" : "Invalid route"
+        }
+    
+    daily_data = get_daily_data()
+    response = {}
+    date_wanted = '-'.join(routes)
+    for current_day_data in daily_data:
+
+        if current_day_data['date'] == date_wanted:
+            response = current_day_data
             break
         
     return {
