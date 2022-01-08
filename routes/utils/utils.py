@@ -167,6 +167,8 @@ def check_costum_routes(routes):
             route = int(routes[i])
             if route < 1:
                 return False
+            if i == 1 and route > 12:
+                return False
             if len(routes[i]) == 1:
                 routes[i] = '0' + routes[i]
     except ValueError:
