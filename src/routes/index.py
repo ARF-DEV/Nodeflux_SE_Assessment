@@ -1,5 +1,5 @@
 import requests
-from flask import Blueprint
+from flask import Blueprint, make_response
 
 index_route = Blueprint("index", __name__)
 
@@ -21,4 +21,4 @@ def index() :
         },
         "message" : "Data fetch success"
     }
-    return response
+    return make_response(response, 200) 

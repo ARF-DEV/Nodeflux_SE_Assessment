@@ -1,5 +1,5 @@
 import requests
-from flask import Blueprint
+from flask import Blueprint, make_response
 from flask import request
 from .utils.utils import check_costum_routes, get_yearly_data
 
@@ -12,22 +12,22 @@ def yearly():
         since = 2020 if request.args.get('since') == None else int(request.args.get('since'))
         upto  = 2022 if request.args.get('upto') == None else int(request.args.get('upto'))
     except ValueError:
-        return {
+        return make_response({
             "ok" : False,
             "message" : "Query parameters is invalid"
-        }
+        }, 400)
 
     if since > upto :
-        return {
+        return make_response({
             "ok" : False,
             "message" : "Query parameter 'since' cannot be larger than 'upto'"
-        }
+        }, 400)
 
     if since < 0 or upto < 0:
-        return {
+        return make_response({
             "ok" : False,
             "message" : "Query parameters cannot be a negative number"
-        }
+        }, 400)
 
     result = get_yearly_data()
     response = []
@@ -37,20 +37,20 @@ def yearly():
         if year >= since and year <= upto :
             response.append(current_year_data) 
 
-    return {
+    return make_response({
         "ok" : True,
         "data" : response,
         "message" : "Data fetch success"
-    }
+    }, 200)
 
 @yearly_route.route('/<year>')
 def get_year(year):
 
     if not check_costum_routes([year]):
-        return {
+        return make_response({
             "ok" : False,
             "message" : "Invalid route"
-        }
+        }, 400)
     result = get_yearly_data()
     response = {}
     for current_year_data in result:
@@ -58,8 +58,8 @@ def get_year(year):
             response = current_year_data
             break
 
-    return {
+    return make_response({
         "ok" : True,
         "data" : response,
         "message" : "Data fetch success"
-    }
+    }, 200)
