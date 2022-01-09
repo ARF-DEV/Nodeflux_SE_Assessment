@@ -54,8 +54,8 @@ def daily_data_by_year(year):
             "message" : "Invalid route"
         }, 400)
 
-    since = ["2020", "03", "02"] if request.args.get('since') == None else request.args.get('since').split('.')
-    upto  = ["2022", "01", "07"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+    since = [year, "01", "01"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = [year, "12", "31"] if request.args.get('upto') == None else request.args.get('upto').split('.')
 
     if not validate_daily_parameters(since):
         return make_response({
@@ -107,8 +107,8 @@ def daily_data_by_year_and_month(year, month):
         }, 400)
     
     
-    since = ["2020", "03", "02"] if request.args.get('since') == None else request.args.get('since').split('.')
-    upto  = ["2022", "01", "07"] if request.args.get('upto') == None else request.args.get('upto').split('.')
+    since = [year, month, "01"] if request.args.get('since') == None else request.args.get('since').split('.')
+    upto  = [year, month, "31"] if request.args.get('upto') == None else request.args.get('upto').split('.')
 
     if not validate_daily_parameters(since):
         return make_response({

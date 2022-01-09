@@ -97,18 +97,14 @@ def get_yearly_data():
 
 def validate_monthly_parameters(params):
     if len(params) != 2:
-        print('A')
         return False
     else:
         try:
             if int(params[0]) < 0:
-                print('B')
                 return False
             if int(params[1]) < 1 or int(params[1]) > 12:
-                print('C')
                 return False
         except ValueError:
-            print('D')
             return False
         
         if len(params[1]) == 1 :
