@@ -13,4 +13,3 @@ app.register_blueprint(index_route, url_prefix="/")
 app.register_blueprint(yearly_route, url_prefix="/yearly")
 app.register_blueprint(monthly_route, url_prefix="/monthly")
 app.register_blueprint(daily_route, url_prefix="/daily")
-
