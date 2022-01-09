@@ -11,4 +11,4 @@ RUN pip install -r requirement.txt
 # copy project directory
 COPY . .
 
-CMD [ "flask", "run", "--host=0.0.0.0" ]
+CMD [ "python", "src/app.py" ]
