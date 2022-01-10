@@ -21,12 +21,13 @@ to run the app make sure you're in the project folder
 ```
 cd Nodeflux_SE_Assessment
 ```
-and then run the command below
-(windows)
+then run the command below <br>
+
+**Windows**
 ```
 python src/app.py
 ```
-(linux)
+**Linux**
 ```
 python3 src/app.py
 ```
@@ -44,16 +45,28 @@ once you know the command you can run this command to run the image
 ```
 docker run -p 8080:8080 <image-id>
 ```
+
+## Running unit test
+to run the unit test you can use this command below <br>
+**Windows**
+```
+python test/test_api.py
+```
+**Linux**
+```
+python3 test/test_api.py
+```
+
 ## Some screenshot of the API in action (Using Postman)
 
-Index
+**Index**
 ![image](https://user-images.githubusercontent.com/33253103/148724048-e9329cf9-9ecc-4649-b0f1-f484faf94dcd.png)
 
-Yearly
+**Yearly**
 ![image](https://user-images.githubusercontent.com/33253103/148724162-bfc193e9-0953-4e65-b623-c3a7bf887f48.png)
 
-Monthly
+**Monthly**
 ![image](https://user-images.githubusercontent.com/33253103/148724181-3b883a0d-6953-449c-80c0-ff7ad2929ca0.png)
 
-Daily
+**Daily**
 ![image](https://user-images.githubusercontent.com/33253103/148724210-535d198d-6269-40ba-a532-5378c4438c57.png)
