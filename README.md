@@ -36,12 +36,12 @@ or if you want to built it using docker you can built the image using this comma
 docker built -t <docker-username>/<image-name>:<tag> .
 ```
 
-and to run the image first you have to know the image ID you want to run using this command
+to run the image first you have to know the image ID you want to run using this command
 ```
 docker images
 ```
 
-once you know the command you can run this command to run the image
+once you know the image ID you can run this command to run the image
 ```
 docker run -p 8080:8080 <image-id>
 ```
